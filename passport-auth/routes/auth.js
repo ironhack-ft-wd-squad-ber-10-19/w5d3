@@ -8,6 +8,16 @@ router.get("/signup", (req, res) => {
   res.render("signup.hbs");
 });
 
+router.get("/google", passport.authenticate("google", { scope: ["profile"] }));
+
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/auth/login",
+    successRedirect: "/"
+  })
+);
+
 // GET /auth/github
 router.get("/github", passport.authenticate("github"));
 
