@@ -68,6 +68,8 @@ passport.deserializeUser((id, done) => {
 });
 
 const bcrypt = require("bcrypt");
+const flash = require("connect-flash");
+app.use(flash());
 
 passport.use(
   new LocalStrategy((username, password, done) => {
@@ -91,6 +93,9 @@ passport.use(
       });
   })
 );
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Express View engine setup
 

@@ -1,5 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
+const passport = require("passport");
 const User = require("../models/User");
 const router = express.Router();
 
@@ -8,35 +9,17 @@ router.get("/signup", (req, res) => {
 });
 
 router.get("/login", (req, res) => {
-  res.render("login.hbs");
+  res.render("login.hbs", { message: req.flash("error") });
 });
 
-router.post("/login", (req, res, next) => {
-  const { username, password } = req.body;
-  User.findOne({ username: username })
-    .then(found => {
-      if (!found) {
-        res.render("login.hbs", {
-          message: "Invalid credentials"
-        });
-        return;
-      }
-      bcrypt.compare(password, found.password).then(bool => {
-        if (bool === false) {
-          res.render("login.hbs", {
-            message: "Invalid credentials"
-          });
-          return;
-        }
-        // we want to log the user in
-        req.session.user = found;
-        res.redirect("/");
-      });
-    })
-    .catch(err => {
-      next(err);
-    });
-});
+router.post(
+  "/login",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/auth/login",
+    failureFlash: true
+  })
+);
 
 router.post("/signup", (req, res, next) => {
   // const username = req.body.username;
@@ -66,9 +49,11 @@ router.post("/signup", (req, res, next) => {
           return User.create({ username: username, password: hash });
         })
         .then(newUser => {
-          // we log the user in
-          req.session.user = newUser;
-          res.redirect("/");
+          //   authenticating the user with passport
+          req.login(newUser, err => {
+            if (err) next(err);
+            else res.redirect("/");
+          });
         });
     })
     .catch(err => {
@@ -77,10 +62,9 @@ router.post("/signup", (req, res, next) => {
 });
 
 router.get("/logout", (req, res, next) => {
-  req.session.destroy(err => {
-    if (err) next(err);
-    else res.redirect("/");
-  });
+  // passport logout
+  req.logout();
+  res.redirect("/");
 });
 
 module.exports = router;

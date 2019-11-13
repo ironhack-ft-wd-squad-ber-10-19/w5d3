@@ -3,12 +3,14 @@ const router = express.Router();
 
 /* GET home page */
 router.get("/", (req, res, next) => {
-  res.render("index", { loggedIn: req.session.user });
+  console.log(req.session);
+  console.log(req.user);
+  res.render("index", { loggedIn: req.user });
 });
 
 const loginCheck = () => {
   return (req, res, next) => {
-    if (req.session.user) {
+    if (req.user) {
       next();
     } else {
       res.redirect("/");
@@ -17,7 +19,7 @@ const loginCheck = () => {
 };
 
 router.get("/profile", loginCheck(), (req, res) => {
-  res.render("profile.hbs", { user: req.session.user });
+  res.render("profile.hbs", { user: req.user });
 });
 
 module.exports = router;
