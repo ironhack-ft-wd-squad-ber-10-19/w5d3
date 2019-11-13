@@ -8,6 +8,18 @@ router.get("/signup", (req, res) => {
   res.render("signup.hbs");
 });
 
+// GET /auth/github
+router.get("/github", passport.authenticate("github"));
+
+// GET /auth/github/callback
+router.get(
+  "/github/callback",
+  passport.authenticate("github", {
+    failureRedirect: "/auth/login",
+    successRedirect: "/"
+  })
+);
+
 router.get("/login", (req, res) => {
   res.render("login.hbs", { message: req.flash("error") });
 });

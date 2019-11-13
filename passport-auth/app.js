@@ -94,6 +94,35 @@ passport.use(
   })
 );
 
+const GithubStrategy = require("passport-github").Strategy;
+
+passport.use(
+  new GithubStrategy(
+    {
+      clientID: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      callbackURL: "http://localhost:3000/auth/github/callback"
+    },
+    (accessToken, refreshToken, profile, done) => {
+      User.findOne({ githubId: profile.id })
+        .then(user => {
+          if (user) {
+            // log the user in
+            done(null, user);
+          } else {
+            return User.create({ githubId: profile.id }).then(newUser => {
+              // log user in
+              done(null, newUser);
+            });
+          }
+        })
+        .catch(err => {
+          done(err);
+        });
+    }
+  )
+);
+
 app.use(passport.initialize());
 app.use(passport.session());
 
