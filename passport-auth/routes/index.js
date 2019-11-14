@@ -4,9 +4,7 @@ const Room = require("../models/Room");
 const User = require("../models/User");
 
 /* GET home page */
-router.get("/", (req, res, next) => {
-  console.log(req.session);
-  console.log(req.user);
+router.get("/", (req, res) => {
   res.render("index", { loggedIn: req.user });
 });
 
@@ -20,10 +18,14 @@ const loginCheck = () => {
   };
 };
 
-router.get("/profile", loginCheck(), (req, res) => {
-  Room.find({ owner: req.user._id }).then(rooms => {
-    res.render("profile.hbs", { user: req.user, rooms: rooms });
-  });
+router.get("/profile", loginCheck(), (req, res, next) => {
+  Room.find({ owner: req.user._id })
+    .then(rooms => {
+      res.render("profile.hbs", { user: req.user, rooms: rooms });
+    })
+    .catch(err => {
+      next(err);
+    });
 });
 
 router.get("/rooms/new", loginCheck(), (req, res) => {
@@ -56,6 +58,7 @@ router.get("/rooms/:roomId", loginCheck(), (req, res, next) => {
     });
 });
 
+// loginCheck will prevent non logged in users from creating a room
 router.post("/rooms", loginCheck(), (req, res, next) => {
   Room.create({
     name: req.body.name,
@@ -72,10 +75,10 @@ router.post("/rooms", loginCheck(), (req, res, next) => {
 });
 
 router.get("/rooms/user/:userId", (req, res, next) => {
-  return User.findById(req.params.userId)
+  User.findById(req.params.userId)
     .then(user => {
-      Room.find({ owner: req.params.userId }).then(rooms => {
-        res.render("rooms", { rooms: rooms, user: user });
+      return Room.find({ owner: req.params.userId }).then(rooms => {
+        res.render("rooms.hbs", { rooms: rooms, user: user });
       });
     })
     .catch(err => {
@@ -83,12 +86,15 @@ router.get("/rooms/user/:userId", (req, res, next) => {
     });
 });
 
-router.get("/rooms/:roomId/delete", (req, res, next) => {
+router.get("/rooms/:roomId/delete", loginCheck(), (req, res, next) => {
   const query = { _id: req.params.roomId };
 
   if (req.user.role !== "admin") {
     query.owner = req.user._id;
   }
+
+  // if the user that made the request is the one that created the room:
+  // delete the room where the `_id` of the room is the one from the params and the `owner` of the room is the user who made the request
 
   Room.deleteOne(query)
     .then(() => {
