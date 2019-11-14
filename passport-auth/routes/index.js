@@ -21,7 +21,9 @@ const loginCheck = () => {
 };
 
 router.get("/profile", loginCheck(), (req, res) => {
-  res.render("profile.hbs", { user: req.user });
+  Room.find({ owner: req.user._id }).then(rooms => {
+    res.render("profile.hbs", { user: req.user, rooms: rooms });
+  });
 });
 
 router.get("/rooms/new", loginCheck(), (req, res) => {
