@@ -7,7 +7,12 @@ const userSchema = new Schema({
   password: String,
   githubId: String,
   googleId: String,
-  name: String
+  name: String,
+  role: {
+    type: String,
+    enum: ["admin", "regular"],
+    default: "regular"
+  }
 });
 
 const User = mongoose.model("User", userSchema);
